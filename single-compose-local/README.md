@@ -23,6 +23,9 @@ Login to IDM (http://localhost:3000/idm/applications/85e62a00-318a-4763-8cff-1ae
 Create Organization "FIWARE-Test"
 Create Application "FIWARE Marketplace" with URL and role settings TODO
 Enter client-id and client-secret in marketplace/docker-compose.yml mp-proxy service
+
+TODO: Struggle with Docker networks to make OAuth2 work (proxy.docker and idm.docker aliases not reacheable from host's chrome!)
+
 Create and assign user test-seller with seller role
 Create and assign user test-customer with customer role
 
