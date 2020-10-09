@@ -1,7 +1,8 @@
 version: '3'
 services:
-    elasticsearch:
+    mp-elasticsearch:
         image: docker.elastic.co/elasticsearch/elasticsearch:6.4.2
+        container_name: mp-elasticsearch
         environment:
             - discovery.type=single-node
             # - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
@@ -14,68 +15,105 @@ services:
         networks:
             marketplace:
 
-    mongo:
+    mp-mongo:
         image: mongo:3.2
-        restart: always
-        networks:
-            marketplace:
-        volumes:
-            - ./mongo-data:/data/db
-
-    mysql:
-        image: mysql:5.7
-        restart: always
-        volumes:
-            - ./mysql-data:/var/lib/mysql
-        networks:
-            marketplace:
-        environment:
-            - MYSQL_ROOT_PASSWORD=my-secret-pw
-            - MYSQL_DATABASE=RSS
-
-    keyrock:
-        image: fiware/idm:7.9.0
-        container_name: fiware-keyrock
-        hostname: keyrock
+        container_name: mp-mongo
         networks:
             marketplace:
                 aliases:
-                    - idm.docker
-        depends_on:
-            - mysql
-        ports:
-            - "3000:3000"
-            - "443:443"
+                    - mp-mongo.docker
         environment:
-            - DEBUG=idm:*
-            - IDM_DB_HOST=mysql
-            - IDM_HOST=http://localhost:3000
-            - IDM_PORT=3000
-            # Development use only 
-            # Use Docker Secrets for Sensitive Data
-            # - IDM_DB_PASS=secret 
-            # - IDM_DB_USER=root
-            - IDM_ADMIN_USER=admin
-            - IDM_ADMIN_EMAIL=admin@test.com
-            - IDM_ADMIN_PASS=1234
-            # If sending eMails point to any STMP server
-            - IDM_EMAIL_HOST=mailer
-            - IDM_EMAIL_PORT=25
+            MONGO_INITDB_ROOT_USERNAME: root
+            MONGO_INITDB_ROOT_PASSWORD: root_pw
+            MONGO_INITDB_DATABASE: root_db
+        volumes:
+            - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+            # Uncomment for data persistance
+            #- ./mongo-data:/data/db
 
-    charging:
-        image: fiware/biz-ecosystem-charging-backend
+    mp-mysql:
+        image: mysql:5.7
+        container_name: mp-mysql
+        volumes:
+            - ./init-mysql.sql:/docker-entrypoint-initdb.d/init-mysql.sql
+            # Uncomment for data persistance
+            #- ./mysql-data:/var/lib/mysql
+        networks:
+            marketplace:
+                aliases:
+                    - mp-mysql.docker
+        environment:
+            - MYSQL_ROOT_PASSWORD=root_pw
+            #- MYSQL_DATABASE=RSS
+
+    mp-apis:
+        image: fiware/biz-ecosystem-apis
+        container_name: mp-apis
+        ports:
+            - 4848:4848
+            - 8080:8080
         links:
-            - mongo
+            - mp-mysql
         depends_on:
-            - mongo
+            - mp-mysql
+        networks:
+            marketplace:
+                aliases:
+                    - apis.docker
+        volumes:
+        #    - ./apis-conf:/etc/default/tmf/  # Used if not configured by environment
+            - ./apis-wars:/apis/wars-ext
+        environment:
+            - BAE_SERVICE_HOST=http://proxy.docker:8004/
+            - MYSQL_ROOT_PASSWORD=root_pw
+            - MYSQL_HOST=mp-mysql.docker
+
+    mp-rss:
+        image: fiware/biz-ecosystem-rss
+        container_name: mp-rss
+        #restart: always
+        ports:
+            - 9999:8080
+            - 4444:4848
+            - 1111:8181
+        links:
+            - mp-mysql
+        depends_on:
+            - mp-mysql
+            - mp-apis
+        networks:
+            marketplace:
+                aliases:
+                    - rss.docker
+        # volumes:
+        #    - ./rss-conf:/etc/default/rss  # Used if not configured by environment
+        environment:
+            - MYSQL_HOST=mp-mysql.docker
+            - MYSQL_PORT=3306
+            - BAE_RSS_DATABASE_URL=jdbc:mysql://mp-mysql.docker:3306/RSS
+            - BAE_RSS_DATABASE_USERNAME=root
+            - BAE_RSS_DATABASE_PASSWORD=root_pw
+            - BAE_RSS_DATABASE_DRIVERCLASSNAME=com.mysql.jdbc.Driver
+            - BAE_RSS_OAUTH_CONFIG_GRANTEDROLE=admin
+            - BAE_RSS_OAUTH_CONFIG_SELLERROLE=seller
+            - BAE_RSS_OAUTH_CONFIG_AGGREGATORROLE=Aggregator
+
+    mp-charging:
+        image: fiware/biz-ecosystem-charging-backend
+        container_name: mp-charging
         networks:
             marketplace:
                 aliases:
                     - charging.docker
         ports:
             - 8006:8006
+        depends_on:
+            - mp-mongo
+            - mp-apis
+            - mp-rss
         volumes:
-            # - ./charging-settings:/business-ecosystem-charging-backend/src/user_settings  # Used if the settings files are provided through the volume 
+            # - ./charging-settings:/business-ecosystem-charging-backend/src/user_settings  # Used if the settings files are provided through the volume
+            #- ./entrypoint.sh:/entrypoint.sh
             - ./charging-bills:/business-ecosystem-charging-backend/src/media/bills
             - ./charging-assets:/business-ecosystem-charging-backend/src/media/assets
             - ./charging-plugins:/business-ecosystem-charging-backend/src/plugins
@@ -86,11 +124,11 @@ services:
           # - BAE_CB_PAYPAL_CLIENT_SECRET=client_secret
 
           # ----- Database configuration ------
-          - BAE_CB_MONGO_SERVER=mongo
+          - BAE_CB_MONGO_SERVER=mp-mongo.docker
           - BAE_CB_MONGO_PORT=27017
           - BAE_CB_MONGO_DB=charging_db
-          # - BAE_CB_MONGO_USER=user
-          # - BAE_CB_MONGO_PASS=passwd
+          - BAE_CB_MONGO_USER=charging
+          - BAE_CB_MONGO_PASS=charging_pw
 
           # ----- Roles Configuration -----
           - BAE_LP_OAUTH2_ADMIN_ROLE=admin
@@ -110,7 +148,7 @@ services:
           - BAE_SERVICE_HOST=http://proxy.docker:8004/  # External URL used to access the BAE
           - BAE_CB_LOCAL_SITE=http://charging.docker:8006/  # Local URL of the charging backend
 
-          # ----- APIs Conection config -----
+          # ----- APIs Connection config -----
           - BAE_CB_CATALOG=http://apis.docker:8080/DSProductCatalog
           - BAE_CB_INVENTORY=http://apis.docker:8080/DSProductInventory
           - BAE_CB_ORDERING=http://apis.docker:8080/DSProductOrdering
@@ -119,14 +157,19 @@ services:
           - BAE_CB_USAGE=http://apis.docker:8080/DSUsageManagement
           - BAE_CB_AUTHORIZE_SERVICE=http://proxy.docker:8004/authorizeService/apiKeys
 
-    proxy:
+
+    mp-proxy:
         image: fiware/biz-ecosystem-logic-proxy
+        container_name: mp-proxy
         links:
-            - mongo
-            - elasticsearch
+            - mp-mongo
+            - mp-elasticsearch
         depends_on:
-            - mongo
-            - elasticsearch
+            - mp-mongo
+            - mp-elasticsearch
+            - mp-apis
+            - mp-rss
+            - mp-charging
         networks:
             marketplace:
                 aliases:
@@ -153,10 +196,10 @@ services:
             # - BAE_LP_HTTPS_PORT=443  # Port where the service runs when SSL is enabled (when HTTPS enabled is true)
 
             # ------ OAUTH2 Config ------
-            - BAE_LP_OAUTH2_SERVER=http://idm.docker:3000  # URL of the FIWARE IDM used for user authentication
-            - BAE_LP_OAUTH2_CLIENT_ID=e3d43e88-7049-434f-9824-2f0387d9860d  # OAuth2 Client ID of the BAE applicaiton
-            - BAE_LP_OAUTH2_CLIENT_SECRET=06c888d5-a17a-4386-9e26-8ee4f7f77135  # OAuth Client Secret of the BAE application
-            - BAE_LP_OAUTH2_CALLBACK=http://proxy.docker:8004/auth/fiware/callback  # Callback URL for receiving the access tokens
+            - BAE_LP_OAUTH2_SERVER=http://localhost:3000  # URL of the FIWARE IDM used for user authentication
+            - BAE_LP_OAUTH2_CLIENT_ID=85e62a00-318a-4763-8cff-1ae305e84b8b  # OAuth2 Client ID of the BAE applicaiton
+            - BAE_LP_OAUTH2_CLIENT_SECRET=0654b9d6-70c2-4216-9e62-17eaeb8a5436  # OAuth Client Secret of the BAE application
+            - BAE_LP_OAUTH2_CALLBACK=http://localhost:8004/auth/fiware/callback  # Callback URL for receiving the access tokens
             - BAE_LP_OAUTH2_ADMIN_ROLE=admin  # Role defined in the IDM client app for admins of the BAE 
             - BAE_LP_OAUTH2_SELLER_ROLE=seller  # Role defined in the IDM client app for sellers of the BAE 
             - BAE_LP_OAUTH2_CUSTOMER_ROLE=customer  # Role defined in the IDM client app for customers of the BAE 
@@ -166,11 +209,11 @@ services:
             # - BAE_LP_THEME=theme  # If provided custom theme to be used by the web site, it must be included in themes volume
 
             # ----- Mongo Config ------
-            # - BAE_LP_MONGO_USER=user
-            # - BAE_LP_MONGO_PASS=pass
-            - BAE_LP_MONGO_SERVER=mongo
+            - BAE_LP_MONGO_USER=belp
+            - BAE_LP_MONGO_PASS=belp_pw
+            - BAE_LP_MONGO_SERVER=mp-mongo.docker
             - BAE_LP_MONGO_PORT=27017
-            - BAE_LP_MONGO_DB=belp
+            - BAE_LP_MONGO_DB=belp_db
 
             - BAE_LP_REVENUE_MODEL=30  # Default market owner precentage for Revenue Sharing models
 
@@ -183,52 +226,8 @@ services:
             # - BAE_LP_ENDPOINT_CATALOG_SECURED=false
             # ...
 
-    apis:
-        image: fiware/biz-ecosystem-apis
-        restart: always
-        ports:
-            - 4848:4848
-            - 8080:8080
-        links:
-            - mysql
-        depends_on:
-            - mysql
-        networks:
-            marketplace:
-                aliases:
-                    - apis.docker
-        # volumes:
-        #    - ./apis-conf:/etc/default/tmf/  # Used if not configured by environment
-        environment:
-            - BAE_SERVICE_HOST=http://proxy.docker:8004/
-            - MYSQL_ROOT_PASSWORD=my-secret-pw
-            - MYSQL_HOST=mysql
 
-    rss:
-        image: fiware/biz-ecosystem-rss
-        restart: always
-        ports:
-            - 9999:8080
-            - 4444:4848
-            - 1111:8181
-        links:
-            - mysql
-        depends_on:
-            - mysql
-        networks:
-            marketplace:
-                aliases:
-                    - rss.docker
-        # volumes:
-        #    - ./rss-conf:/etc/default/rss  # Used if not configured by environment
-        environment:
-            - BAE_RSS_DATABASE_URL=jdbc:mysql://mysql:3306/RSS
-            - BAE_RSS_DATABASE_USERNAME=root
-            - BAE_RSS_DATABASE_PASSWORD=my-secret-pw
-            - BAE_RSS_DATABASE_DRIVERCLASSNAME=com.mysql.jdbc.Driver
-            - BAE_RSS_OAUTH_CONFIG_GRANTEDROLE=admin
-            - BAE_RSS_OAUTH_CONFIG_SELLERROLE=seller
-            - BAE_RSS_OAUTH_CONFIG_AGGREGATORROLE=Aggregator
+
 
 networks:
     marketplace:

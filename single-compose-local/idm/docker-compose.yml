@@ -1,0 +1,52 @@
+version: '3'
+services:
+    idm-mysql:
+        image: mysql:5.7
+        container_name: idm-mysql
+        volumes:
+            - ./init-mysql.sql:/docker-entrypoint-initdb.d/init-mysql.sql
+            # Uncomment for data persistance
+            - ./mysql-data:/var/lib/mysql
+        networks:
+            marketplace:
+                aliases:
+                    - idm-mysql.docker
+        environment:
+            - MYSQL_ROOT_PASSWORD=root_pw
+
+    keyrock:
+        image: fiware/idm:7.9.0
+        container_name: fiware-keyrock
+        networks:
+            marketplace:
+                aliases:
+                    - idm.docker
+        depends_on:
+            - idm-mysql
+        ports:
+            - "3000:3000"
+            - "443:443"
+            - "3005:3005"
+            - "3443:3443"
+        environment:
+            - DEBUG=idm:*
+            - IDM_DB_HOST=idm-mysql.docker
+            - IDM_HOST=http://localhost:3000
+            - IDM_PORT=3000
+            # Development use only 
+            # Use Docker Secrets for Sensitive Data
+            - IDM_DB_PASS=root_pw
+            - IDM_DB_USER=root
+            - IDM_DB_NAME=idm_db
+            - IDM_ADMIN_USER=admin
+            - IDM_ADMIN_EMAIL=admin@test.com
+            - IDM_ADMIN_PASS=admin_pw
+            # If sending eMails point to any STMP server
+            - IDM_EMAIL_HOST=mailer
+            - IDM_EMAIL_PORT=25
+
+
+networks:
+    marketplace:
+        external: true
+
