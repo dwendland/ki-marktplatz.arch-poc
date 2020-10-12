@@ -89,3 +89,14 @@ you grant access to the application and then get redirected to the marketplace f
 should has been exchanged in that moment and you should be able to use the markeplace functionalities
 allowed for that role.
 
+
+## Remarks
+
+Per default, the IDM component is configured for data persistance. This means, that created user, applications, etc.
+will remain when restarting the IDM and IDM DB containers. If data persistance for the IDM should be disabled,
+comment out the mounting of the DB volume in the `idm/docker-compose.yml` MySQL section.
+
+For the marketplace itself, data persistance is disabled by default. Any changes made within the marketplace, e.g. creating products,
+will be lost after restarting the marketplace components. If data persistance should be enabled, uncomment the DB volume
+sections in the `marketplace/docker-compose.yml` file.
+
