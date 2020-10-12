@@ -1,1 +1,6 @@
 *~
+single-compose-local/idm/mysql-data/
+single-compose-local/marketplace/apis-wars/
+single-compose-local/marketplace/charging-inst-plugins/
+single-compose-local/marketplace/proxy-indexes/
+single-compose-local/marketplace/proxy-locales/

@@ -31,7 +31,7 @@ services:
         environment:
             - DEBUG=idm:*
             - IDM_DB_HOST=idm-mysql.docker
-            - IDM_HOST=http://localhost:3000
+            - IDM_HOST=http://idm.docker:3000
             - IDM_PORT=3000
             # Development use only 
             # Use Docker Secrets for Sensitive Data

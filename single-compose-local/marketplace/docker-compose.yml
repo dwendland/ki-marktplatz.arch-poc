@@ -196,10 +196,10 @@ services:
             # - BAE_LP_HTTPS_PORT=443  # Port where the service runs when SSL is enabled (when HTTPS enabled is true)
 
             # ------ OAUTH2 Config ------
-            - BAE_LP_OAUTH2_SERVER=http://localhost:3000  # URL of the FIWARE IDM used for user authentication
+            - BAE_LP_OAUTH2_SERVER=http://idm.docker:3000  # URL of the FIWARE IDM used for user authentication
             - BAE_LP_OAUTH2_CLIENT_ID=85e62a00-318a-4763-8cff-1ae305e84b8b  # OAuth2 Client ID of the BAE applicaiton
             - BAE_LP_OAUTH2_CLIENT_SECRET=0654b9d6-70c2-4216-9e62-17eaeb8a5436  # OAuth Client Secret of the BAE application
-            - BAE_LP_OAUTH2_CALLBACK=http://localhost:8004/auth/fiware/callback  # Callback URL for receiving the access tokens
+            - BAE_LP_OAUTH2_CALLBACK=http://proxy.docker:8004/auth/fiware/callback  # Callback URL for receiving the access tokens
             - BAE_LP_OAUTH2_ADMIN_ROLE=admin  # Role defined in the IDM client app for admins of the BAE 
             - BAE_LP_OAUTH2_SELLER_ROLE=seller  # Role defined in the IDM client app for sellers of the BAE 
             - BAE_LP_OAUTH2_CUSTOMER_ROLE=customer  # Role defined in the IDM client app for customers of the BAE 
