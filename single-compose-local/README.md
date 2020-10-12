@@ -3,8 +3,8 @@
 This shows how to run a full local instance of the FIWARE Marketplace including the Keyrock IDM.
 
 Documentation on the marketplace and its different components can be found at the 
-(Documentation page)[https://business-api-ecosystem.readthedocs.io/en/latest/] and
-on (Github)[https://github.com/FIWARE-TMForum/Business-API-Ecosystem].
+[Documentation page](https://business-api-ecosystem.readthedocs.io/en/latest/) and
+on [Github](https://github.com/FIWARE-TMForum/Business-API-Ecosystem).
 
 # Prerequisites
 
@@ -81,7 +81,7 @@ and running when the proxy has completed it's sanity checks and can access the R
 You can check this with `docker logs mp-proxy`.
 
 Now open the marketplace frontend provided by the proxy component on
-(http://proxy.docker:8004)[http://proxy.docker:8004]
+[http://proxy.docker:8004](http://proxy.docker:8004) via the browser.
 
 You can sign in as one of the created users. Remember to log out of the IDM first. During the log in
 process, you should be forwarded to the IDM where you log in e.g. as a user with a seller role. There
