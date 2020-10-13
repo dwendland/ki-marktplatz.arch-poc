@@ -9,10 +9,6 @@ services:
                     - charging.docker
         ports:
             - 8006:8006
-        #depends_on:
-        #    - mp-mongo
-        #    - mp-apis
-        #    - mp-rss
         volumes:
             # - ./charging-settings:/business-ecosystem-charging-backend/src/user_settings  # Used if the settings files are provided through the volume
             #- ./entrypoint.sh:/entrypoint.sh
@@ -63,14 +59,7 @@ services:
     mp-proxy:
         image: fiware/biz-ecosystem-logic-proxy
         container_name: mp-proxy
-        #links:
-        #    - mp-mongo
-        #    - mp-elasticsearch
         depends_on:
-        #    - mp-mongo
-        #    - mp-elasticsearch
-        #    - mp-apis
-        #    - mp-rss
             - mp-charging
         networks:
             web:

@@ -6,10 +6,6 @@ services:
         ports:
             - 4848:4848
             - 8080:8080
-        #links:
-        #    - mp-mysql
-        #depends_on:
-        #    - mp-mysql
         networks:
             web:
                 aliases:

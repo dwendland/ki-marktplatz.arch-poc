@@ -3,16 +3,10 @@ services:
     mp-rss:
         image: fiware/biz-ecosystem-rss
         container_name: mp-rss
-        #restart: always
         ports:
             - 9999:8080
             - 4444:4848
             - 1111:8181
-        #links:
-        #    - mp-mysql
-        #depends_on:
-        #    - mp-mysql
-        #    - mp-apis
         networks:
             web:
                 aliases:

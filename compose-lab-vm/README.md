@@ -119,7 +119,8 @@ docker logs mp-rss
 ```
 
 
-### Finally one can start the remaining marketplace components, the charging backend and
+### Charging backend and proxy
+Finally one can start the remaining marketplace components, the charging backend and
 the proxy component:
 ```shell
 cd marketplace
