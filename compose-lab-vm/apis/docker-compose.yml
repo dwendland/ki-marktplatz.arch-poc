@@ -1,0 +1,27 @@
+version: '3'
+services:
+    mp-apis:
+        image: fiware/biz-ecosystem-apis
+        container_name: mp-apis
+        ports:
+            - 4848:4848
+            - 8080:8080
+        #links:
+        #    - mp-mysql
+        #depends_on:
+        #    - mp-mysql
+        networks:
+            web:
+                aliases:
+                    - apis.docker
+        volumes:
+        #    - ./apis-conf:/etc/default/tmf/  # Used if not configured by environment
+            - ./apis-wars:/apis/wars-ext
+        environment:
+            - BAE_SERVICE_HOST=http://proxy.docker:8004/
+            - MYSQL_ROOT_PASSWORD=root_pw
+            - MYSQL_HOST=mp-mysql.docker
+
+networks:
+    web:
+        external: true

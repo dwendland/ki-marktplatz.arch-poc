@@ -1,0 +1,36 @@
+version: '3'
+services:
+    mp-rss:
+        image: fiware/biz-ecosystem-rss
+        container_name: mp-rss
+        #restart: always
+        ports:
+            - 9999:8080
+            - 4444:4848
+            - 1111:8181
+        #links:
+        #    - mp-mysql
+        #depends_on:
+        #    - mp-mysql
+        #    - mp-apis
+        networks:
+            web:
+                aliases:
+                    - rss.docker
+        # volumes:
+        #    - ./rss-conf:/etc/default/rss  # Used if not configured by environment
+        environment:
+            - MYSQL_HOST=mp-mysql.docker
+            - MYSQL_PORT=3306
+            - BAE_RSS_DATABASE_URL=jdbc:mysql://mp-mysql.docker:3306/RSS
+            - BAE_RSS_DATABASE_USERNAME=root
+            - BAE_RSS_DATABASE_PASSWORD=root_pw
+            - BAE_RSS_DATABASE_DRIVERCLASSNAME=com.mysql.jdbc.Driver
+            - BAE_RSS_OAUTH_CONFIG_GRANTEDROLE=admin
+            - BAE_RSS_OAUTH_CONFIG_SELLERROLE=seller
+            - BAE_RSS_OAUTH_CONFIG_AGGREGATORROLE=Aggregator
+
+
+networks:
+    web:
+        external: true
