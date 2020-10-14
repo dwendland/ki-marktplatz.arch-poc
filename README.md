@@ -1,4 +1,4 @@
-# kimarktplatz.arch-poc
+# KI-Marktplatz proof-of-concept
 Proof of concept of architecture for KI-Marktplatz
 
 This repo provides Docker configurations and documentation for running
