@@ -4,9 +4,6 @@ This shows how to run a full instance of the FIWARE Marketplace including the Ke
 on a FIWARE Lab Ubuntu VM. In the following, it is assumed that the VM has the
 public IP `46.17.108.87`. Change this to your IP or domain, when available.
 
-Documentation on the marketplace and its different components can be found at the 
-[Documentation page](https://business-api-ecosystem.readthedocs.io/en/latest/) and
-on [Github](https://github.com/FIWARE-TMForum/Business-API-Ecosystem).
 
 # Prerequisites
 
