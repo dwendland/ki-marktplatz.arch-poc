@@ -14,6 +14,7 @@ can be found at the
 on [Github](https://github.com/FIWARE-TMForum/Business-API-Ecosystem).
 
 The following picture shows the high-level architecture of the FIWARE Marketplace.
+
 ![FIWARE Marketplace](./img/FW-Marketplace.png)
 
 
